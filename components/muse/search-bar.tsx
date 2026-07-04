@@ -19,11 +19,33 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
   const recognitionRef = useRef<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      alert(`File selected: ${file.name}\n(Note: Full backend file storage integration required for production)`)
-      // You could hook this into your /api/upload endpoint here
+    if (!file) return
+
+    setIsLoading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/upload-file', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+
+      if (data.error) {
+        alert(`Upload failed: ${data.error}`)
+      } else {
+        alert('File uploaded and saved to Ledger successfully!')
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Upload failed due to network error.')
+    } finally {
+      setIsLoading(false)
+      // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
