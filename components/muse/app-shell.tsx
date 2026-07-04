@@ -37,6 +37,11 @@ export function AppShell() {
         theme={theme} 
         onToggleTheme={toggleTheme} 
         onOpenAI={() => setIsAIModalOpen(true)}
+        onAskAI={(q) => {
+          setInitialQuery(q)
+          setStartWithVoice(false)
+          setIsAIModalOpen(true)
+        }}
       />
 
       <main className="flex-1 space-y-6 px-4 pb-36 pt-4">
@@ -44,11 +49,6 @@ export function AppShell() {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <UpcomingReminders />
             <DocumentUpload />
-            <SearchBar onAskAI={(q) => {
-              setInitialQuery(q)
-              setStartWithVoice(false)
-              setIsAIModalOpen(true)
-            }} />
           </div>
         )}
         {activeTab === 'reports' && <ReportsTab />}

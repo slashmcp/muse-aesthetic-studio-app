@@ -2,19 +2,22 @@
 
 import Image from 'next/image'
 import { Moon, Sun, Sparkles } from 'lucide-react'
+import { SearchBar } from './search-bar'
 
 export function Header({
   theme,
   onToggleTheme,
   onOpenAI,
+  onAskAI,
 }: {
   theme: 'dark' | 'light'
   onToggleTheme: () => void
   onOpenAI?: () => void
+  onAskAI?: (query: string) => void
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-border">
             <Image
@@ -65,6 +68,9 @@ export function Header({
             )}
           </button>
         </div>
+      </div>
+      <div className="px-4 pb-3">
+        <SearchBar onAskAI={onAskAI} />
       </div>
     </header>
   )
