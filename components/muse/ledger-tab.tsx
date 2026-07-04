@@ -141,40 +141,55 @@ export function LedgerTab() {
                 </tr>
               </thead>
               <tbody>
-                {sortedDocuments.map((doc) => (
-                  <tr key={doc.id} className="bg-card border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
-                      {new Date(doc.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 font-medium text-foreground">
-                      <div className="flex flex-col gap-1">
-                        <span>{doc.title || 'Untitled'}</span>
-                        {doc.is_recurring && (
-                          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-gold/10 text-gold rounded w-fit border border-gold/20">
-                            {doc.recurring_duration}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 bg-muted rounded-md text-xs font-medium text-foreground">
-                        {doc.category || 'Uncategorized'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
-                      {currency(Number(doc.amount) || 0)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button 
-                        onClick={() => handleDelete(doc.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                        title="Delete record"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {sortedDocuments.map((doc) => {
+                  const urlMatch = doc.content?.match(/(https?:\/\/[^\s]+)/)
+                  const fileUrl = urlMatch ? urlMatch[0] : null
+
+                  return (
+                    <tr 
+                      key={doc.id} 
+                      onClick={() => {
+                        if (fileUrl) window.open(fileUrl, '_blank')
+                      }}
+                      className={`bg-card border-b border-border/50 transition-colors ${fileUrl ? 'cursor-pointer hover:bg-muted/50' : 'hover:bg-muted/30'}`}
+                      title={fileUrl ? 'Click to view original document' : ''}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
+                        {new Date(doc.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-foreground">
+                        <div className="flex flex-col gap-1">
+                          <span>{doc.title || 'Untitled'}</span>
+                          {doc.is_recurring && (
+                            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-gold/10 text-gold rounded w-fit border border-gold/20">
+                              {doc.recurring_duration}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2.5 py-1 bg-muted rounded-md text-xs font-medium text-foreground">
+                          {doc.category || 'Uncategorized'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
+                        {currency(Number(doc.amount) || 0)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDelete(doc.id)
+                          }}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                          title="Delete record"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
