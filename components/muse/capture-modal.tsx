@@ -3,19 +3,91 @@
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { X, Check, Store, DollarSign, Tag, Loader2, ScanLine } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { currency } from '@/lib/muse-data'
 
 type Phase = 'uploading' | 'review'
 
-export function CaptureModal({ onClose }: { onClose: () => void }) {
+export function CaptureModal({ file, onClose }: { file?: File, onClose: () => void }) {
   const [phase, setPhase] = useState<Phase>('uploading')
-  const [tag, setTag] = useState('#backbar')
+  const [tag, setTag] = useState('#Uncategorized')
+  const [extractedData, setExtractedData] = useState<any>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('/receipt-scan.png')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
+
+  const tags = ['#Supplies', '#Rent', '#Utilities', '#Marketing', '#Personal', '#Software', '#Meals', '#Travel', '#Uncategorized']
 
   useEffect(() => {
-    const t = setTimeout(() => setPhase('review'), 2600)
-    return () => clearTimeout(t)
-  }, [])
+    if (file) {
+      setPreviewUrl(URL.createObjectURL(file))
+      processReceipt(file)
+    } else {
+      // Mock flow if no file (shouldn't happen but fallback)
+      const t = setTimeout(() => {
+        setExtractedData({ title: 'Mock Vendor', amount: 99.99, publicUrl: '' })
+        setTag('#Supplies')
+        setPhase('review')
+      }, 2600)
+      return () => clearTimeout(t)
+    }
+    return () => {
+      if (file && previewUrl !== '/receipt-scan.png') URL.revokeObjectURL(previewUrl)
+    }
+  }, [file])
 
-  const tags = ['#backbar', '#supplies', '#utilities', '#marketing']
+  const processReceipt = async (imgFile: File) => {
+    try {
+      const formData = new FormData()
+      formData.append('file', imgFile)
+      
+      const res = await fetch('/api/process-receipt', {
+        method: 'POST',
+        body: formData,
+      })
+      
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      
+      setExtractedData({
+        title: data.extracted.title,
+        amount: data.extracted.amount,
+        is_recurring: data.extracted.is_recurring,
+        publicUrl: data.publicUrl
+      })
+      setTag(`#${data.extracted.category}`)
+      setPhase('review')
+    } catch (err: any) {
+      console.error(err)
+      setErrorMsg(err.message || 'Failed to process receipt')
+      setPhase('review')
+    }
+  }
+
+  const handleSave = async () => {
+    if (!extractedData) {
+      onClose()
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const { error } = await supabase.from('documents').insert([{
+        title: extractedData.title,
+        amount: extractedData.amount,
+        category: tag.replace('#', ''),
+        content: `Scanned Receipt: ${extractedData.publicUrl}`,
+        is_recurring: extractedData.is_recurring
+      }])
+      
+      if (error) throw error
+      onClose()
+    } catch (err) {
+      console.error(err)
+      alert('Failed to save to ledger')
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 mx-auto flex w-full max-w-md items-end justify-center">
@@ -44,7 +116,7 @@ export function CaptureModal({ onClose }: { onClose: () => void }) {
         {/* Receipt preview with scanning sweep */}
         <div className="relative mx-auto aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-background-2">
           <Image
-            src="/receipt-scan.png"
+            src={previewUrl}
             alt="Captured receipt being scanned"
             fill
             className={`object-cover transition ${
@@ -72,17 +144,21 @@ export function CaptureModal({ onClose }: { onClose: () => void }) {
             <Loader2 className="h-4 w-4 animate-spin text-gold" />
             Muse AI is reading vendor, total & category
           </div>
+        ) : errorMsg ? (
+          <div className="mt-4 p-3 bg-destructive/10 text-destructive text-sm rounded-lg text-center">
+            {errorMsg}
+          </div>
         ) : (
           <div className="mt-4 space-y-3">
             <ReviewField
               icon={Store}
               label="Vendor"
-              value="Skin Script Rx"
+              value={extractedData?.title || ''}
             />
             <ReviewField
               icon={DollarSign}
               label="Total"
-              value="$317.79"
+              value={currency(extractedData?.amount || 0)}
             />
 
             <div className="rounded-2xl border border-border bg-background-2 p-3">
@@ -92,14 +168,14 @@ export function CaptureModal({ onClose }: { onClose: () => void }) {
                   Category Tag
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
                 {tags.map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTag(t)}
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-95 ${
-                      tag === t
+                      tag.toLowerCase() === t.toLowerCase()
                         ? 'bg-primary text-primary-foreground'
                         : 'border border-border bg-card text-muted-foreground'
                     }`}
@@ -112,11 +188,12 @@ export function CaptureModal({ onClose }: { onClose: () => void }) {
 
             <button
               type="button"
-              onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98]"
+              onClick={handleSave}
+              disabled={isSaving}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground active:scale-[0.98] disabled:opacity-50"
             >
-              <Check className="h-4 w-4" />
-              Add to Ledger
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {isSaving ? 'Saving...' : 'Add to Ledger'}
             </button>
           </div>
         )}
@@ -143,7 +220,7 @@ function ReviewField({
         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
-        <p className="text-sm font-semibold text-foreground">{value}</p>
+        <p className="text-sm font-semibold text-foreground truncate max-w-[200px]">{value}</p>
       </div>
       <span className="rounded-full bg-sage/15 px-2 py-0.5 text-[10px] font-semibold text-sage">
         Detected

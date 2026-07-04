@@ -30,3 +30,16 @@ begin
   order by ts_rank(fts, to_tsquery('english', search_query)) desc;
 end;
 $$;
+
+-- Create the Storage Bucket for invoices
+insert into storage.buckets (id, name, public) 
+values ('invoices', 'invoices', true) 
+on conflict (id) do nothing;
+
+-- Allow public uploads to invoices bucket
+create policy "Allow public uploads" on storage.objects
+for insert to public with check (bucket_id = 'invoices');
+
+-- Allow public reading of invoices
+create policy "Allow public viewing" on storage.objects
+for select to public using (bucket_id = 'invoices');
