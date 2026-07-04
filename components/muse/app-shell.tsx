@@ -6,6 +6,7 @@ import { BottomDock } from './bottom-dock'
 import { CaptureModal } from './capture-modal'
 import { DocumentUpload } from './document-upload'
 import { SearchBar } from './search-bar'
+import { LedgerTab } from './ledger-tab'
 import { ReportsTab } from './reports-tab'
 import { UpcomingReminders } from './upcoming-reminders'
 import { AiAssistantModal } from './ai-assistant-modal'
@@ -51,6 +52,7 @@ export function AppShell() {
             <DocumentUpload />
           </div>
         )}
+        {activeTab === 'ledger' && <LedgerTab />}
         {activeTab === 'reports' && <ReportsTab />}
       </main>
 

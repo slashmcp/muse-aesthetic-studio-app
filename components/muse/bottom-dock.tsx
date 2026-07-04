@@ -1,6 +1,6 @@
 'use client'
 
-import { Home, PieChart, Mic, Camera, Settings } from 'lucide-react'
+import { Home, Mic, PieChart, Settings, Camera, FileText } from 'lucide-react'
 
 export function BottomDock({
   activeTab,
@@ -21,6 +21,12 @@ export function BottomDock({
           label="Home"
           active={activeTab === 'home'}
           onClick={() => onTabChange('home')}
+        />
+        <DockButton
+          icon={FileText}
+          label="Ledger"
+          active={activeTab === 'ledger'}
+          onClick={() => onTabChange('ledger')}
         />
         <DockButton
           icon={PieChart}
