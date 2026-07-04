@@ -1,0 +1,177 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-sage: var(--sage);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-cormorant), ui-serif, Georgia, serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.4);
+}
+
+/* Light Mode — Soft Alabaster / brushed gold */
+:root {
+  color-scheme: light;
+  --background: #faf9f6;
+  --background-2: #f2f0ea;
+  --foreground: #1c1b1f;
+  --card: #ffffff;
+  --card-foreground: #1c1b1f;
+  --popover: #ffffff;
+  --popover-foreground: #1c1b1f;
+  --primary: #3d5245;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f0ea;
+  --secondary-foreground: #1c1b1f;
+  --muted: #f2f0ea;
+  --muted-foreground: #6b6a70;
+  --accent: #efe7d6;
+  --accent-foreground: #6b5222;
+  --gold: #a9823f;
+  --gold-soft: #cdae76;
+  --sage: #3d5245;
+  --destructive: #b23a3a;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a9823f;
+  --radius: 0.9rem;
+  --shadow-soft: 0 1px 2px rgba(28, 27, 31, 0.04), 0 8px 24px rgba(28, 27, 31, 0.06);
+}
+
+/* Dark Mode — Obsidian / champagne gold (default) */
+.dark {
+  color-scheme: dark;
+  --background: #0b0b0c;
+  --background-2: #121214;
+  --foreground: #f7f6f3;
+  --card: #1e1e22;
+  --card-foreground: #f7f6f3;
+  --popover: #1e1e22;
+  --popover-foreground: #f7f6f3;
+  --primary: #d9be86;
+  --primary-foreground: #17160f;
+  --secondary: #27272a;
+  --secondary-foreground: #f7f6f3;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #2a251a;
+  --accent-foreground: #e6cf9c;
+  --gold: #d9be86;
+  --gold-soft: #b99f66;
+  --sage: #8ba699;
+  --destructive: #e0736f;
+  --destructive-foreground: #17160f;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d9be86;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  .theme-transition,
+  .theme-transition * {
+    transition:
+      background-color 0.4s ease,
+      border-color 0.4s ease,
+      color 0.4s ease,
+      box-shadow 0.4s ease;
+  }
+}
+
+/* Voice wave animation */
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+.animate-wave {
+  animation: wave 1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Scanning sweep for capture modal */
+@keyframes scan {
+  0% {
+    top: 0%;
+  }
+  100% {
+    top: 100%;
+  }
+}
+.animate-scan {
+  animation: scan 1.6s ease-in-out infinite alternate;
+}
+
+/* subtle pulse for AI status dot */
+@keyframes softpulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+.animate-softpulse {
+  animation: softpulse 2s ease-in-out infinite;
+}
+
+/* hide scrollbar for polished mobile feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
