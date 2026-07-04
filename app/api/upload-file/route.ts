@@ -47,6 +47,8 @@ export async function POST(request: Request) {
       else mimeType = 'image/png'
     }
 
+    const isPdf = mimeType === 'application/pdf'
+
     let extractedData: any = {
       title: file.name,
       amount: 0,
@@ -77,7 +79,9 @@ export async function POST(request: Request) {
             role: 'user',
             content: [
               { type: 'text', text: 'Extract the details from this document:' },
-              { type: 'file', data: buffer, mimeType }
+              isPdf 
+                ? { type: 'file', data: buffer, mimeType }
+                : { type: 'image', image: buffer }
             ]
           }
         ]
