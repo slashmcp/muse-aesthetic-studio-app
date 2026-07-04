@@ -36,7 +36,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         muted 
         playsInline 
         onEnded={startFadeOut}
-        className="w-full h-full object-cover"
+        className="w-full max-w-[280px] md:max-w-md object-contain"
       />
     </div>
   )
