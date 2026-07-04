@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Header } from './header'
 import { BottomDock } from './bottom-dock'
-import { VoiceOverlay } from './voice-overlay'
 import { CaptureModal } from './capture-modal'
 import { DocumentUpload } from './document-upload'
 import { SearchBar } from './search-bar'
