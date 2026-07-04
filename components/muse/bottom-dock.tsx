@@ -4,16 +4,12 @@ import { Home, PieChart, Mic, Camera, Settings } from 'lucide-react'
 
 export function BottomDock({
   activeTab,
-  onTab,
-  onMic,
-  onCapture,
-  listening,
+  onTabChange,
+  onOpenVoice,
 }: {
   activeTab: string
-  onTab: (t: string) => void
-  onMic: () => void
-  onCapture: () => void
-  listening: boolean
+  onTabChange: (t: string) => void
+  onOpenVoice: () => void
 }) {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md px-4 pb-5">
@@ -22,20 +18,19 @@ export function BottomDock({
           icon={Home}
           label="Home"
           active={activeTab === 'home'}
-          onClick={() => onTab('home')}
+          onClick={() => onTabChange('home')}
         />
         <DockButton
           icon={PieChart}
           label="Reports"
           active={activeTab === 'reports'}
-          onClick={() => onTab('reports')}
+          onClick={() => onTabChange('reports')}
         />
 
         {/* Central elevated camera FAB */}
         <div className="relative -mt-10 flex flex-col items-center">
           <button
             type="button"
-            onClick={onCapture}
             aria-label="Capture a receipt"
             className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-4 ring-background transition active:scale-95"
           >
@@ -49,15 +44,14 @@ export function BottomDock({
         <DockButton
           icon={Mic}
           label="Voice"
-          active={listening}
-          highlight={listening}
-          onClick={onMic}
+          active={false}
+          onClick={onOpenVoice}
         />
         <DockButton
           icon={Settings}
           label="Settings"
           active={activeTab === 'settings'}
-          onClick={() => onTab('settings')}
+          onClick={() => onTabChange('settings')}
         />
       </nav>
     </div>

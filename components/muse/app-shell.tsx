@@ -15,10 +15,9 @@ type Theme = 'dark' | 'light'
 
 export function AppShell() {
   const [theme, setTheme] = useState<Theme>('dark')
-  const [listening, setListening] = useState(false)
-  const [capturing, setCapturing] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
+  const [startWithVoice, setStartWithVoice] = useState(false)
 
   // Initialize theme
   useEffect(() => {
@@ -52,15 +51,17 @@ export function AppShell() {
 
       <AiAssistantModal 
         isOpen={isAIModalOpen} 
+        startWithVoice={startWithVoice}
         onClose={() => setIsAIModalOpen(false)} 
       />
 
       <BottomDock
         activeTab={activeTab}
-        onTab={setActiveTab}
-        onMic={() => setListening(true)}
-        onCapture={() => setCapturing(true)}
-        listening={listening}
+        onTabChange={setActiveTab}
+        onOpenVoice={() => {
+          setStartWithVoice(true)
+          setIsAIModalOpen(true)
+        }}
       />
 
       {listening && <VoiceOverlay onClose={() => setListening(false)} />}
