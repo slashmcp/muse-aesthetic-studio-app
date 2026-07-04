@@ -239,6 +239,11 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
         // Remove the temporary uploading message
         setMessages(prev => prev.filter(m => !m.content.toString().startsWith('[Uploading')))
         
+        let itemsText = "No line items extracted."
+        if (data.extracted.items && data.extracted.items.length > 0) {
+          itemsText = data.extracted.items.map((i: any) => `- ${i.description}: $${i.amount}`).join('\n')
+        }
+
         // Auto-send the extracted data to the chat so the AI can log it
         const prompt = `I just uploaded a receipt/invoice. Here is the data your vision model extracted from it:
 - Vendor: ${data.extracted.title}
@@ -246,7 +251,10 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
 - Category: ${data.extracted.category}
 - Recurring: ${data.extracted.is_recurring ? 'Yes' : 'No'}
 
-Please log this expense into the ledger for me and confirm when it's done.`
+Items:
+${itemsText}
+
+Please log this expense into the ledger for me, including the items list exactly as shown, and confirm when it's done.`
         
         await appendMessage(prompt)
       } else {

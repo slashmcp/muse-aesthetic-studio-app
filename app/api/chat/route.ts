@@ -31,7 +31,8 @@ CRITICAL COMMUNICATION RULES:
             amount: { type: "number", description: "The total cost of the expense in USD." },
             category: { type: "string", description: "The category of the expense (e.g., Supplies, Back Bar, Rent, Utilities, Marketing, Personal, Software, Meals, Travel, Insurance, Licensing / Tax, Uncategorized)." },
             description: { type: "string", description: "A brief title or vendor name for the expense." },
-            is_recurring: { type: "boolean", description: "Whether this is a recurring subscription or payment." }
+            is_recurring: { type: "boolean", description: "Whether this is a recurring subscription or payment." },
+            items: { type: "string", description: "The itemized list of what was purchased, exactly as provided." }
           },
           required: ["amount", "category", "description"]
         }
@@ -139,11 +140,12 @@ CRITICAL COMMUNICATION RULES:
           
           try {
             if (name === 'logExpense') {
+              const contentText = input.items ? `Items:\n${input.items}` : 'Logged via AI Assistant'
               const { data, error } = await supabase.from('documents').insert([{
                 title: input.description,
                 amount: input.amount,
                 category: input.category,
-                content: 'Logged via AI Assistant',
+                content: contentText,
                 is_recurring: input.is_recurring || false
               }]).select().single()
               
@@ -151,7 +153,7 @@ CRITICAL COMMUNICATION RULES:
               else result = { success: true, message: `Successfully logged $${input.amount} for ${input.description}.` }
               
             } else if (name === 'searchLedger') {
-              let query = supabase.from('documents').select('id, title, amount, category, created_at, is_recurring').order('created_at', { ascending: false }).limit(Math.min(input.limit || 10, 50))
+              let query = supabase.from('documents').select('id, title, amount, category, created_at, is_recurring, content').order('created_at', { ascending: false }).limit(Math.min(input.limit || 10, 50))
               if (input.category) query = query.ilike('category', input.category)
               if (input.keyword) query = query.ilike('title', `%${input.keyword}%`)
               

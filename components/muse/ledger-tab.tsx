@@ -214,9 +214,14 @@ export function LedgerTab() {
                         <div className="flex flex-col gap-1">
                           <span>{doc.title || 'Untitled'}</span>
                           {doc.is_recurring && (
-                            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-gold/10 text-gold rounded w-fit border border-gold/20">
+                            <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 bg-gold/10 text-gold rounded w-fit border border-gold/20 mt-1">
                               {doc.recurring_duration}
                             </span>
+                          )}
+                          {doc.content && doc.content.startsWith('Items:') && (
+                            <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap pl-2 border-l-2 border-border/50">
+                              {doc.content.replace('Items:\n', '')}
+                            </div>
                           )}
                         </div>
                       </td>
