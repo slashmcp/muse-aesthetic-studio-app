@@ -26,7 +26,7 @@ export function Header({
           </div>
           <div className="leading-tight">
             <p className="font-serif text-lg font-semibold tracking-tight text-foreground">
-              Muse Studio
+              Muse Aesthetic Studio
             </p>
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-1.5 w-1.5">

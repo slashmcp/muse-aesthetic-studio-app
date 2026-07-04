@@ -1,0 +1,28 @@
+-- Create a generic documents table
+create table documents (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  content text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Add a generated column for full text search
+alter table documents
+add column fts tsvector generated always as (to_tsvector('english', title || ' ' || content)) stored;
+
+-- Create an index to make searches faster
+create index documents_fts_idx on documents using gin (fts);
+
+-- Function to search documents
+create or replace function search_documents(search_query text)
+returns setof documents
+language plpgsql
+as $$
+begin
+  return query
+  select *
+  from documents
+  where fts @@ to_tsquery('english', search_query)
+  order by ts_rank(fts, to_tsquery('english', search_query)) desc;
+end;
+$$;

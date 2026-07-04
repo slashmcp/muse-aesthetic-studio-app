@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { Header } from './header'
-import { BudgetDashboard } from './budget-dashboard'
-import { AgentStream } from './agent-stream'
-import { Ledger } from './ledger'
 import { BottomDock } from './bottom-dock'
 import { VoiceOverlay } from './voice-overlay'
 import { CaptureModal } from './capture-modal'
+import { DocumentUpload } from './document-upload'
+import { SearchBar } from './search-bar'
 
 type Theme = 'dark' | 'light'
 
@@ -33,9 +32,8 @@ export function AppShell() {
       <Header theme={theme} onToggleTheme={toggleTheme} />
 
       <main className="flex-1 space-y-6 px-4 pb-36 pt-4">
-        <BudgetDashboard />
-        <AgentStream />
-        <Ledger />
+        <DocumentUpload />
+        <SearchBar />
       </main>
 
       <BottomDock
