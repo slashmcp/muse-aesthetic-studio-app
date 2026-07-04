@@ -179,7 +179,7 @@ You MUST use your tools to accurately answer user questions about their finances
       },
     })
 
-    return result.toDataStreamResponse()
+    return result.toTextStreamResponse()
   } catch (error: any) {
     console.error('Chat API error:', error)
     return new Response(JSON.stringify({ error: error.message }), { status: 500 })
