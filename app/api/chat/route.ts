@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai'
+import { anthropic } from '@ai-sdk/anthropic'
 import { streamText } from 'ai'
 
 // Allow streaming responses up to 30 seconds
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json()
 
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: anthropic('claude-4-5-haiku-20251001'),
       system: 'You are the Muse AI Assistant, a highly capable virtual agent designed to help run an aesthetic studio. You are professional, concise, and helpful. You help manage appointments, expenses, and non-resellable inventory.',
       messages,
     })
