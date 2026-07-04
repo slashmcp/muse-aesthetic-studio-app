@@ -28,6 +28,8 @@ insert into categories (name) values
   ('Software'),
   ('Meals'),
   ('Travel'),
+  ('Insurance'),
+  ('Licensing / Tax'),
   ('Uncategorized')
 on conflict (name) do nothing;
 
