@@ -62,9 +62,6 @@ export function AppShell() {
           setIsAIModalOpen(true)
         }}
       />
-
-      {listening && <VoiceOverlay onClose={() => setListening(false)} />}
-      {capturing && <CaptureModal onClose={() => setCapturing(false)} />}
     </div>
   )
 }
