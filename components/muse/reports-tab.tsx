@@ -71,11 +71,11 @@ export function ReportsTab() {
     const items: Record<string, number> = {}
     
     documents.forEach(doc => {
-      if (doc.content && doc.content.startsWith('Items:\n')) {
-        const lines = doc.content.split('\n').slice(1)
+      if (doc.content) {
+        const lines = doc.content.split('\n')
         lines.forEach((line: string) => {
-          // Parse format: "- Description: $10.00"
-          const match = line.match(/^- (.*?):\s*\$?([\d,.]+)/)
+          // Parse format: "- Description: $10.00" or "- Description: $-10.00"
+          const match = line.match(/^\s*-\s*(.*?):\s*\$?([\d,.-]+)/)
           if (match) {
             const name = match[1].trim()
             const amount = parseFloat(match[2].replace(/,/g, ''))
