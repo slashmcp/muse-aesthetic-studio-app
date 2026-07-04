@@ -17,6 +17,7 @@ export function AppShell() {
   const [activeTab, setActiveTab] = useState('home')
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
   const [startWithVoice, setStartWithVoice] = useState(false)
+  const [capturing, setCapturing] = useState(false)
 
   // Initialize theme
   useEffect(() => {
@@ -61,7 +62,10 @@ export function AppShell() {
           setStartWithVoice(true)
           setIsAIModalOpen(true)
         }}
+        onCapture={() => setCapturing(true)}
       />
+
+      {capturing && <CaptureModal onClose={() => setCapturing(false)} />}
     </div>
   )
 }
