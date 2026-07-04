@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Mic } from 'lucide-react'
+import { Mic, Paperclip } from 'lucide-react'
 
 // Ensure SpeechRecognition is available on window for TS
 declare global {
@@ -17,6 +17,15 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
   const [isLoading, setIsLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      alert(`File selected: ${file.name}\n(Note: Full backend file storage integration required for production)`)
+      // You could hook this into your /api/upload endpoint here
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -78,12 +87,28 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
   return (
     <div className="w-full max-w-xl mx-auto space-y-4">
       <form onSubmit={handleSearch} className="flex gap-2">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept=".pdf,image/*" 
+          onChange={handleFileUpload} 
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="shrink-0 h-10 w-10 flex items-center justify-center rounded-md bg-muted/50 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          title="Upload file or PDF"
+        >
+          <Paperclip className="h-4 w-4" />
+        </button>
+
         <div className="relative flex-1">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={isListening ? "Listening..." : "Search documents or Ask AI..."}
+            placeholder={isListening ? "Listening..." : "Search or Ask AI..."}
             className="w-full px-4 py-2 pr-10 bg-background border border-border focus:ring-1 focus:ring-gold focus:outline-none rounded-md text-sm"
           />
           <button
@@ -112,7 +137,7 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
           disabled={isLoading}
           className="px-4 py-2 text-primary-foreground bg-primary hover:opacity-90 transition-opacity rounded-md disabled:opacity-50 font-medium text-sm"
         >
-          {isLoading ? 'Searching...' : 'Search'}
+          {isLoading ? '...' : 'Search'}
         </button>
       </form>
 
