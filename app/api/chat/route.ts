@@ -12,7 +12,10 @@ export async function POST(req: Request) {
 
     const result = await streamText({
       model: anthropic('claude-haiku-4-5-20251001'),
-      system: 'You are the Muse AI Assistant, a highly capable virtual agent designed to help run an aesthetic studio. You are professional, concise, and helpful. You manage expenses, receipts, and financial reporting. You have direct access to the studio\'s Ledger (database of expenses). You MUST use your tools to accurately answer user questions about their finances.',
+      system: `You are the Muse AI Assistant, a highly capable virtual agent designed to help run an aesthetic studio. You are professional, concise, and helpful. 
+You manage expenses, receipts, and financial reporting. You have direct access to the studio's Ledger (database of expenses). 
+You also proactively manage inventory by analyzing purchase frequencies, setting reminders, and acting as an industry knowledge base by searching the web.
+You MUST use your tools to accurately answer user questions about their finances, inventory, and to search the web for industry-specific information.`,
       messages,
       tools: {
         logExpense: tool({
@@ -75,6 +78,101 @@ export async function POST(req: Request) {
             
             const total = data.reduce((sum, doc) => sum + (Number(doc.amount) || 0), 0)
             return { success: true, total: total, count: data.length, category: category || 'All Categories' }
+          }
+        }),
+        analyzeReorderFrequency: tool({
+          description: 'Analyze how often an item is purchased to calculate reorder frequency and determine if it is time to reorder.',
+          parameters: z.object({
+            itemName: z.string().describe('The name of the item or vendor to analyze (e.g., "Chemical Peels", "Wipes").')
+          }),
+          execute: async ({ itemName }) => {
+            const { data, error } = await supabase
+              .from('documents')
+              .select('created_at')
+              .ilike('title', `%${itemName}%`)
+              .order('created_at', { ascending: false })
+            
+            if (error) return { success: false, error: error.message }
+            if (!data || data.length < 2) {
+              return { success: true, message: `Not enough purchase history for '${itemName}' to calculate frequency.` }
+            }
+            
+            // Calculate average days between purchases
+            let totalDays = 0
+            for (let i = 0; i < data.length - 1; i++) {
+              const d1 = new Date(data[i].created_at).getTime()
+              const d2 = new Date(data[i+1].created_at).getTime()
+              totalDays += (d1 - d2) / (1000 * 60 * 60 * 24)
+            }
+            const avgDays = Math.round(totalDays / (data.length - 1))
+            const daysSinceLast = Math.round((new Date().getTime() - new Date(data[0].created_at).getTime()) / (1000 * 60 * 60 * 24))
+            
+            return { 
+              success: true, 
+              item: itemName, 
+              purchaseCount: data.length, 
+              averageDaysBetweenPurchases: avgDays,
+              daysSinceLastPurchase: daysSinceLast,
+              isOverdue: daysSinceLast >= avgDays
+            }
+          }
+        }),
+        manageReminders: tool({
+          description: 'Add or delete items from the user\'s Upcoming Reminders / Shopping List.',
+          parameters: z.object({
+            action: z.enum(['add', 'delete']).describe('Whether to add a new reminder or delete an existing one.'),
+            title: z.string().describe('The title of the reminder (e.g., "Order esthetic wipes").'),
+            days_from_now: z.number().optional().describe('If adding, how many days from today the reminder is due (0 for today).')
+          }),
+          execute: async ({ action, title, days_from_now }) => {
+            if (action === 'add') {
+              const due = new Date()
+              due.setDate(due.getDate() + (days_from_now || 0))
+              
+              const { error } = await supabase.from('reminders').insert([{
+                title,
+                due_date: due.toISOString().split('T')[0],
+                type: 'inventory'
+              }])
+              if (error) return { success: false, error: error.message }
+              return { success: true, message: `Added reminder: ${title}` }
+            } else {
+              // Match by title
+              const { error } = await supabase.from('reminders').delete().ilike('title', `%${title}%`)
+              if (error) return { success: false, error: error.message }
+              return { success: true, message: `Deleted reminder: ${title}` }
+            }
+          }
+        }),
+        searchWeb: tool({
+          description: 'Search the live internet to act as an industry knowledge base for trade shows, FDA guidelines, etc.',
+          parameters: z.object({
+            query: z.string().describe('The search query.')
+          }),
+          execute: async ({ query }) => {
+            try {
+              const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+              })
+              const html = await res.text()
+              
+              // Simple regex to extract snippets
+              const snippetRegex = /<a class="result__snippet[^>]*>([^<]+)<\/a>/g
+              const snippets = []
+              let match
+              let count = 0
+              while ((match = snippetRegex.exec(html)) !== null && count < 5) {
+                snippets.push(match[1].trim())
+                count++
+              }
+              
+              if (snippets.length === 0) {
+                 return { success: true, results: "No results found or unable to parse." }
+              }
+              return { success: true, results: snippets }
+            } catch (error: any) {
+              return { success: false, error: error.message }
+            }
           }
         })
       },

@@ -17,6 +17,15 @@ create table if not exists categories (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Create reminders table
+create table if not exists reminders (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  due_date date,
+  type text default 'general',
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
 -- Insert default categories
 insert into categories (name) values 
   ('Supplies'),
