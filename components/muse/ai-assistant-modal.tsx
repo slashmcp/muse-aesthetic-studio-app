@@ -2,6 +2,7 @@
 
 import { X, Send, Sparkles, Bot, User, Mic, Paperclip, Camera, GripHorizontal } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import confetti from 'canvas-confetti'
 
 interface AiAssistantModalProps {
   isOpen: boolean
@@ -42,6 +43,47 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const processedMessagesRef = useRef<Set<string>>(new Set())
+
+  // Hide toast after 5s
+  useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [toastMessage])
+
+  // Listen for successful expense logs for gamification
+  useEffect(() => {
+    if (messages.length === 0) return
+    const lastMessage = messages[messages.length - 1]
+    
+    if (lastMessage.role === 'assistant' && lastMessage.toolInvocations && !processedMessagesRef.current.has(lastMessage.id)) {
+      processedMessagesRef.current.add(lastMessage.id)
+      
+      const logExpenseTool = lastMessage.toolInvocations.find(t => t.toolName === 'logExpense' && t.result?.success)
+      if (logExpenseTool) {
+        // Fire confetti
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 }
+        })
+
+        // Check milestones
+        const currentCount = parseInt(localStorage.getItem('museUploadCount') || '0', 10) + 1
+        localStorage.setItem('museUploadCount', currentCount.toString())
+
+        if (currentCount === 3) {
+          setToastMessage('🎉 Congratulations! You successfully logged 3 receipts! Keep it up!')
+        } else if (currentCount === 5) {
+          setToastMessage('🏆 Amazing! 5 receipts uploaded! You are an absolute master at tracking expenses! hehe')
+        }
+      }
+    }
+  }, [messages])
 
   useEffect(() => {
     const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 768)
@@ -279,6 +321,12 @@ Please log this expense into the ledger for me, including the items list exactly
 
   const modalContent = (
     <>
+      {toastMessage && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-[100] w-[90%] bg-gold text-primary-foreground px-4 py-3 rounded-xl text-sm font-medium shadow-2xl animate-in fade-in slide-in-from-top-4 text-center">
+          {toastMessage}
+        </div>
+      )}
+
       {/* Header (Draggable) */}
       <div 
         className={`flex items-center justify-between p-4 border-b border-border bg-background/50 ${isDesktop ? 'cursor-grab active:cursor-grabbing' : ''}`}
