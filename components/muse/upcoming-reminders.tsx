@@ -3,21 +3,23 @@
 import { useState } from 'react'
 import { CalendarDays, X, Bell } from 'lucide-react'
 
-// Placeholder data for upcoming events
+// Real upcoming events in the aesthetics industry
 const UPCOMING_EVENTS = [
   {
     id: 1,
-    title: 'Aesthetics Tech Summit 2026',
-    date: 'Oct 12, 2026',
+    title: 'IECSC New York 2027',
+    date: 'Mar 7, 2027',
     type: 'conferences',
-    daysAway: 45,
+    daysAway: 247,
+    url: 'https://www.iecsc.com/'
   },
   {
     id: 2,
-    title: 'Q3 Estimated Tax Payment',
-    date: 'Sep 15, 2026',
-    type: 'taxes',
-    daysAway: 18,
+    title: 'The Aesthetic Show (Las Vegas)',
+    date: 'Jul 8, 2027',
+    type: 'conferences',
+    daysAway: 370,
+    url: 'https://www.aestheticshow.com/'
   }
 ]
 
@@ -38,7 +40,7 @@ export function UpcomingReminders() {
 
       <div className="flex items-center gap-2 mb-3">
         <Bell className="h-4 w-4 text-gold" />
-        <h3 className="text-sm font-semibold text-foreground tracking-tight">Upcoming Reminders</h3>
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">Upcoming Industry Events</h3>
       </div>
 
       <div className="space-y-3">
@@ -48,7 +50,14 @@ export function UpcomingReminders() {
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{event.title}</p>
+              <a 
+                href={event.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-sm font-medium text-foreground truncate hover:text-gold transition-colors inline-block"
+              >
+                {event.title}
+              </a>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs text-muted-foreground">{event.date}</span>
                 <span className="text-[10px] font-semibold text-gold px-1.5 py-0.5 rounded-full bg-gold/10">
@@ -62,3 +71,4 @@ export function UpcomingReminders() {
     </div>
   )
 }
+
