@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 interface AiAssistantModalProps {
   isOpen: boolean
   startWithVoice?: boolean
+  initialQuery?: string
   onClose: () => void
 }
 
@@ -18,17 +19,32 @@ declare global {
   }
 }
 
-export function AiAssistantModal({ isOpen, startWithVoice, onClose }: AiAssistantModalProps) {
-  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading } = useChat()
+export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose }: AiAssistantModalProps) {
+  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, append } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<any>(null)
+  const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false)
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Handle initial query from search
+  useEffect(() => {
+    if (isOpen && initialQuery && !hasProcessedInitialQuery) {
+      append({
+        role: 'user',
+        content: initialQuery
+      })
+      setHasProcessedInitialQuery(true)
+    }
+    if (!isOpen) {
+      setHasProcessedInitialQuery(false)
+    }
+  }, [isOpen, initialQuery, hasProcessedInitialQuery, append])
 
   // Setup Web Speech API
   useEffect(() => {

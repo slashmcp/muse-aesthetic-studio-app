@@ -18,6 +18,7 @@ export function AppShell() {
   const [isAIModalOpen, setIsAIModalOpen] = useState(false)
   const [startWithVoice, setStartWithVoice] = useState(false)
   const [capturing, setCapturing] = useState(false)
+  const [initialQuery, setInitialQuery] = useState('')
 
   // Initialize theme
   useEffect(() => {
@@ -43,7 +44,11 @@ export function AppShell() {
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <UpcomingReminders />
             <DocumentUpload />
-            <SearchBar />
+            <SearchBar onAskAI={(q) => {
+              setInitialQuery(q)
+              setStartWithVoice(false)
+              setIsAIModalOpen(true)
+            }} />
           </div>
         )}
         {activeTab === 'reports' && <ReportsTab />}
@@ -52,7 +57,11 @@ export function AppShell() {
       <AiAssistantModal 
         isOpen={isAIModalOpen} 
         startWithVoice={startWithVoice}
-        onClose={() => setIsAIModalOpen(false)} 
+        initialQuery={initialQuery}
+        onClose={() => {
+          setIsAIModalOpen(false)
+          setInitialQuery('') // Reset query on close
+        }} 
       />
 
       <BottomDock

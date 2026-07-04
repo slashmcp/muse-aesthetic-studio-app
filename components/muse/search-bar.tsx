@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-export function SearchBar() {
+export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -32,13 +32,24 @@ export function SearchBar() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search documents..."
-          className="flex-1 px-4 py-2 bg-background border rounded-md"
+          placeholder="Search documents or Ask AI..."
+          className="flex-1 px-4 py-2 bg-background border border-border focus:ring-1 focus:ring-gold focus:outline-none rounded-md text-sm"
         />
+        <button
+          type="button"
+          onClick={() => {
+            if (query.trim() && onAskAI) {
+              onAskAI(query)
+            }
+          }}
+          className="px-4 py-2 text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 rounded-md font-medium text-sm transition-colors"
+        >
+          Ask AI
+        </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 text-white bg-primary rounded-md disabled:opacity-50"
+          className="px-4 py-2 text-primary-foreground bg-primary hover:opacity-90 transition-opacity rounded-md disabled:opacity-50 font-medium text-sm"
         >
           {isLoading ? 'Searching...' : 'Search'}
         </button>
