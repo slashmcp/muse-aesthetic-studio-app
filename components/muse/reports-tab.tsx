@@ -66,6 +66,33 @@ export function ReportsTab() {
       .reverse() // Chronological order
   }, [documents])
 
+  // Aggregate expenses by line item
+  const itemData = useMemo(() => {
+    const items: Record<string, number> = {}
+    
+    documents.forEach(doc => {
+      if (doc.content && doc.content.startsWith('Items:\n')) {
+        const lines = doc.content.split('\n').slice(1)
+        lines.forEach((line: string) => {
+          // Parse format: "- Description: $10.00"
+          const match = line.match(/^- (.*?):\s*\$?([\d,.]+)/)
+          if (match) {
+            const name = match[1].trim()
+            const amount = parseFloat(match[2].replace(/,/g, ''))
+            if (name && !isNaN(amount)) {
+              items[name] = (items[name] || 0) + amount
+            }
+          }
+        })
+      }
+    })
+
+    return Object.entries(items)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 10) // Top 10 items
+  }, [documents])
+
   // Custom colors
   const COLORS = ['#a9823f', '#8ba699', '#e6cf9c', '#a1a1aa', '#e0736f', '#b23a3a', '#6b5222', '#3d5245', '#cdae76', '#d9be86']
 
@@ -161,6 +188,53 @@ export function ReportsTab() {
                   }}
                 />
                 <Bar dataKey="amount" fill="#a9823f" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-soft">
+        <h3 className="text-sm font-semibold tracking-tight text-foreground mb-4">
+          Top Expenses by Individual Item
+        </h3>
+        {itemData.length === 0 ? (
+          <p className="text-muted-foreground text-sm text-center py-8">No itemized receipts logged yet. Upload new invoices to see item-level breakdowns here.</p>
+        ) : (
+          <div className="h-[350px] w-full mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={itemData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="var(--border)" />
+                <XAxis 
+                  type="number"
+                  tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                  tickFormatter={(val) => `$${val}`}
+                />
+                <YAxis 
+                  type="category"
+                  dataKey="name" 
+                  tick={{ fontSize: 11, fill: 'var(--foreground)' }} 
+                  axisLine={false} 
+                  tickLine={false}
+                  width={140}
+                />
+                <BarTooltip
+                  cursor={{ fill: 'var(--muted)' }}
+                  formatter={(value: number) => currency(value)}
+                  contentStyle={{
+                    backgroundColor: 'var(--card)',
+                    borderColor: 'var(--border)',
+                    borderRadius: '0.5rem',
+                    color: 'var(--foreground)',
+                  }}
+                />
+                <Bar dataKey="amount" fill="#8ba699" radius={[0, 4, 4, 0]} barSize={24}>
+                  {itemData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[(index + 1) % COLORS.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
