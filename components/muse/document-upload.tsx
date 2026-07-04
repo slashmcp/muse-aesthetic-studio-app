@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload } from 'lucide-react'
+import { Upload, Camera } from 'lucide-react'
 
 export function DocumentUpload() {
   const [title, setTitle] = useState('')
@@ -23,11 +23,11 @@ export function DocumentUpload() {
       const data = await res.json()
       
       if (res.ok && data.data) {
-        setMessage('Document uploaded successfully! AI will process it shortly.')
+        setMessage('Invoice / Receipt uploaded successfully! AI will process it shortly.')
         setTitle('')
         setContent('')
       } else {
-        setMessage(data.error || 'Failed to upload document')
+        setMessage(data.error || 'Failed to upload invoice/receipt')
       }
     } catch (error) {
       console.error('Error uploading:', error)
@@ -40,8 +40,11 @@ export function DocumentUpload() {
   return (
     <div className="w-full max-w-xl mx-auto space-y-4 p-6 bg-card border border-border rounded-xl shadow-soft">
       <div className="flex items-center gap-2 mb-4">
-        <Upload className="h-5 w-5 text-gold" />
-        <h2 className="text-lg font-semibold">Upload Document</h2>
+        <div className="flex items-center gap-1">
+          <Upload className="h-5 w-5 text-gold" />
+          <Camera className="h-5 w-5 text-gold" />
+        </div>
+        <h2 className="text-lg font-semibold">Upload Invoice / Receipt</h2>
       </div>
       
       <form onSubmit={handleUpload} className="space-y-4">
@@ -52,7 +55,7 @@ export function DocumentUpload() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder="Document title"
+            placeholder="Invoice or Receipt title"
           />
         </div>
         
@@ -62,7 +65,7 @@ export function DocumentUpload() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full px-4 py-2 bg-background border border-border rounded-md h-32 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder="Paste document content here for AI processing..."
+            placeholder="Paste invoice or receipt text here for AI processing..."
           />
         </div>
         
