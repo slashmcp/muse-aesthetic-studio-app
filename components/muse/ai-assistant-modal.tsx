@@ -1,6 +1,5 @@
 'use client'
 
-import { useChat } from '@ai-sdk/react'
 import { X, Send, Sparkles, Bot, User, Mic, Paperclip, Camera } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -19,8 +18,17 @@ declare global {
   }
 }
 
+type Message = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string | any[]
+  toolInvocations?: any[]
+}
+
 export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose }: AiAssistantModalProps) {
-  const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, append } = useChat()
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   const [isListening, setIsListening] = useState(false)
@@ -30,21 +38,52 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isLoading])
+
+  const appendMessage = async (content: string) => {
+    if (!content.trim()) return
+
+    const newMessage: Message = { id: Date.now().toString(), role: 'user', content }
+    setMessages(prev => [...prev, newMessage])
+    setIsLoading(true)
+
+    try {
+      const apiMessages = [...messages, newMessage].map(m => ({ role: m.role, content: m.content }))
+      
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages })
+      })
+      
+      const data = await res.json()
+      if (res.ok) {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: data.response,
+          toolInvocations: data.toolInvocations
+        }])
+      } else {
+        console.error(data.error)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Handle initial query from search
   useEffect(() => {
     if (isOpen && initialQuery && !hasProcessedInitialQuery) {
-      append({
-        role: 'user',
-        content: initialQuery
-      })
+      appendMessage(initialQuery)
       setHasProcessedInitialQuery(true)
     }
     if (!isOpen) {
       setHasProcessedInitialQuery(false)
     }
-  }, [isOpen, initialQuery, hasProcessedInitialQuery, append])
+  }, [isOpen, initialQuery, hasProcessedInitialQuery])
 
   // Setup Web Speech API
   useEffect(() => {
@@ -73,7 +112,7 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
         }
       }
     }
-  }, [setInput])
+  }, [])
 
   // Start voice automatically if requested
   useEffect(() => {
@@ -98,7 +137,18 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
     }
   }
 
-  // Handle closing modal
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || isLoading) return
+    const currentInput = input
+    setInput('')
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+    }
+    appendMessage(currentInput)
+  }
+
   const handleClose = () => {
     if (isListening) {
       recognitionRef.current?.stop()
@@ -157,7 +207,7 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
                 {suggestionPills.map((suggestion, i) => (
                   <button 
                     key={i}
-                    onClick={() => append({ role: 'user', content: suggestion.split(' ').slice(1).join(' ') })}
+                    onClick={() => appendMessage(suggestion.split(' ').slice(1).join(' '))}
                     className="w-full text-left text-sm px-4 py-2.5 bg-background border border-border hover:border-gold/50 hover:bg-gold/5 rounded-lg transition-colors text-foreground shadow-sm"
                   >
                     {suggestion}
@@ -178,7 +228,7 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
                       <Bot className="h-4 w-4 text-foreground" />
                     )}
                   </div>
-                  {m.content && (
+                  {typeof m.content === 'string' && m.content && (
                     <div className={`rounded-2xl px-4 py-2 max-w-[75%] text-sm ${
                       m.role === 'user' 
                         ? 'bg-primary text-primary-foreground rounded-tr-sm' 
@@ -190,11 +240,9 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
                 </div>
                 
                 {/* Render Tool Invocations */}
-                {m.toolInvocations?.map((toolInvocation: any) => {
-                  const toolCallId = toolInvocation.toolCallId
-                  
+                {m.toolInvocations?.map((toolInvocation: any, index: number) => {
                   return (
-                    <div key={toolCallId} className="flex gap-3 ml-11">
+                    <div key={toolInvocation.toolCallId || index} className="flex gap-3 ml-11">
                       <div className="bg-background border border-border rounded-lg p-3 text-xs text-muted-foreground max-w-[85%]">
                         <div className="flex items-center gap-1.5 font-medium text-foreground mb-1">
                           <Sparkles className="h-3 w-3 text-gold" />
@@ -203,9 +251,9 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
                         <pre className="overflow-x-auto p-2 bg-muted rounded mt-2">
                           {JSON.stringify(toolInvocation.args, null, 2)}
                         </pre>
-                        {'result' in toolInvocation && (
-                          <div className="mt-2 pt-2 border-t border-border text-sage font-medium">
-                            ✓ {toolInvocation.result?.message || 'Success'}
+                        {toolInvocation.result && (
+                          <div className={`mt-2 pt-2 border-t border-border font-medium ${toolInvocation.result.success === false ? 'text-destructive' : 'text-sage'}`}>
+                            {toolInvocation.result.success === false ? '✗ Failed' : `✓ ${toolInvocation.result.message || 'Success'}`}
                           </div>
                         )}
                       </div>
@@ -249,7 +297,7 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
             <div className="relative flex-1">
               <input
                 value={input}
-                onChange={handleInputChange}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder={isListening ? "Listening..." : "Message Muse AI..."}
                 className="w-full bg-background border border-border rounded-full pl-4 pr-20 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gold"
               />
