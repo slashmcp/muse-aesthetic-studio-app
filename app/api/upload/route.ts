@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     if (finalContent && finalContent !== 'Pending AI Processing...') {
       try {
         const { object } = await generateObject({
-          model: anthropic('claude-4-5-haiku-20251001'),
+          model: anthropic('claude-3-5-haiku-20241022'),
           system: 'You are an expense parser. Extract the total amount and the category from the text. Use a standard business expense category (e.g., Supplies, Rent, Software, Meals, Travel). If you can extract a short title, provide it.',
           schema: z.object({
             amount: z.number().default(0),
