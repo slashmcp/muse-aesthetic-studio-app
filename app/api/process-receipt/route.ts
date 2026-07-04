@@ -36,22 +36,36 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // Determine correct mimeType
+    let mimeType = file.type
+    if (!mimeType) {
+      const ext = fileExt.toLowerCase()
+      if (ext === 'pdf') mimeType = 'application/pdf'
+      else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg'
+      else mimeType = 'image/png'
+    }
+
     // 3. Process with Claude 3.5 Sonnet (Vision)
     const { object } = await generateObject({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      system: 'You are an expert expense parser. Read the receipt image. Extract the Merchant Name (Title), the Total Amount, and the Category. Default to standard business categories: Supplies, Rent, Utilities, Marketing, Personal, Software, Meals, Travel. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.',
+      system: 'You are an expert expense parser. Read the receipt/invoice. Extract the Merchant Name (Title), the Total Amount, the Date, the Category, and an Itemized list. Default to standard business categories: Supplies, Rent, Utilities, Marketing, Personal, Software, Meals, Travel. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.',
       schema: z.object({
         title: z.string().default('Unknown Merchant'),
         amount: z.number().default(0),
         category: z.string().default('Uncategorized'),
         is_recurring: z.boolean().default(false),
+        date: z.string().describe('The date on the invoice/receipt in YYYY-MM-DD format.').optional(),
+        items: z.array(z.object({
+          description: z.string(),
+          amount: z.number()
+        })).optional()
       }),
       messages: [
         {
           role: 'user',
           content: [
             { type: 'text', text: 'Extract the details from this document:' },
-            { type: 'file', data: buffer, mimeType: file.type || 'image/png' }
+            { type: 'file', data: buffer, mimeType }
           ]
         }
       ]

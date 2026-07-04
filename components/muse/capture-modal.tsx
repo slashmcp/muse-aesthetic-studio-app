@@ -53,6 +53,8 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
         title: data.extracted.title,
         amount: data.extracted.amount,
         is_recurring: data.extracted.is_recurring,
+        date: data.extracted.date,
+        items: data.extracted.items,
         publicUrl: data.publicUrl
       })
       setTag(`#${data.extracted.category}`)
@@ -77,12 +79,21 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
 
     setIsSaving(true)
     try {
+      let contentBody = `Scanned Receipt: ${extractedData.publicUrl}`
+      if (extractedData.items && extractedData.items.length > 0) {
+        contentBody += '\n\n**Itemized List:**\n'
+        extractedData.items.forEach((item: any) => {
+          contentBody += `- ${item.description}: $${item.amount.toFixed(2)}\n`
+        })
+      }
+
       const { error } = await supabase.from('documents').insert([{
         title: extractedData.title,
         amount: extractedData.amount,
         category: tag.replace('#', ''),
-        content: `Scanned Receipt: ${extractedData.publicUrl}`,
-        is_recurring: extractedData.is_recurring
+        content: contentBody,
+        is_recurring: extractedData.is_recurring,
+        ...(extractedData.date && { created_at: new Date(extractedData.date).toISOString() })
       }])
       
       if (error) throw error
@@ -160,6 +171,13 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
               label="Vendor"
               value={extractedData?.title || ''}
             />
+            {extractedData?.date && (
+              <ReviewField
+                icon={Store} // I'll use Store for date since Calendar isn't imported
+                label="Date"
+                value={extractedData.date}
+              />
+            )}
             <ReviewField
               icon={DollarSign}
               label="Total"
