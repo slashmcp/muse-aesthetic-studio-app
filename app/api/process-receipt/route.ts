@@ -50,8 +50,8 @@ export async function POST(request: Request) {
         {
           role: 'user',
           content: [
-            { type: 'text', text: 'Extract the details from this receipt:' },
-            { type: 'image', image: buffer }
+            { type: 'text', text: 'Extract the details from this document:' },
+            { type: 'file', data: buffer, mimeType: file.type || 'image/png' }
           ]
         }
       ]
