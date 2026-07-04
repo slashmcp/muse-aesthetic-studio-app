@@ -99,9 +99,9 @@ export async function POST(request: Request) {
       if (existingDocs && existingDocs.length > 0) {
         extractedData.title = `[DUPLICATE] ${extractedData.title}`
       }
-    } catch (parseError) {
+    } catch (parseError: any) {
       console.error('AI Parsing error:', parseError)
-      // Fallback to defaults if AI fails
+      return NextResponse.json({ error: `AI Processing failed: ${parseError.message || parseError}` }, { status: 500 })
     }
 
     // Insert into Ledger
