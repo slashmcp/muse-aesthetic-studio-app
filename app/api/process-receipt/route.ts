@@ -47,33 +47,66 @@ export async function POST(request: Request) {
 
     const isPdf = mimeType === 'application/pdf'
 
-    // 3. Process with Claude 3.5 Sonnet (Vision)
-    const { object } = await generateObject({
-      model: anthropic('claude-3-5-sonnet-20241022'),
-      system: 'You are an expert expense parser. Read the receipt/invoice. Extract the Merchant Name (Title), the Total Amount, the Date, the Category, and an Itemized list. Default to standard business categories: Supplies, Rent, Utilities, Marketing, Personal, Software, Meals, Travel. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.',
-      schema: z.object({
-        title: z.string().default('Unknown Merchant'),
-        amount: z.number().default(0),
-        category: z.string().default('Uncategorized'),
-        is_recurring: z.boolean().default(false),
-        date: z.string().describe('The date on the invoice/receipt in YYYY-MM-DD format.').optional(),
-        items: z.array(z.object({
-          description: z.string(),
-          amount: z.number()
-        })).optional()
-      }),
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: 'Extract the details from this document:' },
-            isPdf 
-              ? { type: 'file', data: buffer.toString('base64'), mimeType } 
-              : { type: 'image', image: buffer.toString('base64') }
-          ]
-        }
-      ]
+    // 3. Process with Claude 3.5 Sonnet (Vision) via raw API
+    const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1024,
+        system: 'You are an expert expense parser. Read the receipt/invoice. Extract the Merchant Name (Title), the Total Amount, the Date, the Category, and an Itemized list. Default to standard business categories: Supplies, Rent, Utilities, Marketing, Personal, Software, Meals, Travel. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Extract the details from this document:' },
+              isPdf 
+                ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: buffer.toString('base64') } }
+                : { type: 'image', source: { type: 'base64', media_type: mimeType, data: buffer.toString('base64') } }
+            ]
+          }
+        ],
+        tools: [{
+          name: 'extract_receipt',
+          description: 'Extract receipt details',
+          input_schema: {
+            type: 'object',
+            properties: {
+              title: { type: 'string' },
+              amount: { type: 'number' },
+              category: { type: 'string' },
+              is_recurring: { type: 'boolean' },
+              date: { type: 'string', description: 'YYYY-MM-DD format' },
+              items: { 
+                type: 'array', 
+                items: { type: 'object', properties: { description: { type: 'string' }, amount: { type: 'number' } }, required: ['description', 'amount'] }
+              }
+            },
+            required: ['title', 'amount', 'category', 'is_recurring']
+          }
+        }],
+        tool_choice: { type: 'tool', name: 'extract_receipt' }
+      })
     })
+
+    if (!anthropicResponse.ok) {
+      const errText = await anthropicResponse.text()
+      throw new Error(`Anthropic API error: ${anthropicResponse.status} ${errText}`)
+    }
+
+    const aiData = await anthropicResponse.json()
+    const toolCall = aiData.content?.find((c: any) => c.type === 'tool_use' && c.name === 'extract_receipt')
+    
+    const object = toolCall?.input || {
+      title: 'Unknown Merchant',
+      amount: 0,
+      category: 'Uncategorized',
+      is_recurring: false
+    }
 
     // Duplicate detection
     const { data: existingDocs } = await supabase
