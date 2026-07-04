@@ -11,7 +11,6 @@ export function DocumentUpload() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim() || !content.trim()) return
 
     setIsLoading(true)
     setMessage('')
@@ -24,7 +23,7 @@ export function DocumentUpload() {
       const data = await res.json()
       
       if (res.ok && data.data) {
-        setMessage('Document uploaded successfully!')
+        setMessage('Document uploaded successfully! AI will process it shortly.')
         setTitle('')
         setContent('')
       } else {
@@ -47,25 +46,23 @@ export function DocumentUpload() {
       
       <form onSubmit={handleUpload} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Title</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Title (Optional)</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder="Document title"
-            required
           />
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Content</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Content (Optional)</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full px-4 py-2 bg-background border border-border rounded-md h-32 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder="Paste document content here..."
-            required
+            placeholder="Paste document content here for AI processing..."
           />
         </div>
         

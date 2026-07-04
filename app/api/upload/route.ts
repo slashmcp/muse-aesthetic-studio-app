@@ -5,13 +5,13 @@ export async function POST(request: Request) {
   try {
     const { title, content } = await request.json()
 
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 })
-    }
+    // Since title/content are not required, we provide fallback defaults for the DB
+    const finalTitle = title?.trim() || 'Untitled Document'
+    const finalContent = content?.trim() || 'Pending AI Processing...'
 
     const { data, error } = await supabase
       .from('documents')
-      .insert([{ title, content }])
+      .insert([{ title: finalTitle, content: finalContent }])
       .select()
       .single()
 
@@ -26,3 +26,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
   }
 }
+
