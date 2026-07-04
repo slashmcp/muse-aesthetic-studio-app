@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const { messages } = await req.json()
 
     const result = await streamText({
-      model: anthropic('claude-3-5-haiku-20241022'),
+      model: anthropic('claude-haiku-4-5-20251001'),
       system: 'You are the Muse AI Assistant, a highly capable virtual agent designed to help run an aesthetic studio. You are professional, concise, and helpful. You help manage appointments, expenses, and non-resellable inventory. You also pay special attention to esthetician events and trade shows in Chicago and Des Moines.',
       messages,
       tools: {
