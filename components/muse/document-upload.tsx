@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { Upload, Camera } from 'lucide-react'
+import { Upload, Camera, RefreshCw } from 'lucide-react'
 
 export function DocumentUpload() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [isRecurring, setIsRecurring] = useState(false)
+  const [recurringDuration, setRecurringDuration] = useState('monthly')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -18,7 +20,12 @@ export function DocumentUpload() {
       const res = await fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content }),
+        body: JSON.stringify({ 
+          title, 
+          content, 
+          isRecurring, 
+          recurringDuration: isRecurring ? recurringDuration : null 
+        }),
       })
       const data = await res.json()
       
@@ -26,6 +33,7 @@ export function DocumentUpload() {
         setMessage('Invoice / Receipt uploaded successfully! AI will process it shortly.')
         setTitle('')
         setContent('')
+        setIsRecurring(false)
       } else {
         setMessage(data.error || 'Failed to upload invoice/receipt')
       }
@@ -47,7 +55,7 @@ export function DocumentUpload() {
         <h2 className="text-lg font-semibold">Upload Invoice / Receipt</h2>
       </div>
       
-      <form onSubmit={handleUpload} className="space-y-4">
+      <form onSubmit={handleUpload} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">Title (Optional)</label>
           <input
@@ -67,6 +75,37 @@ export function DocumentUpload() {
             className="w-full px-4 py-2 bg-background border border-border rounded-md h-32 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
             placeholder="Paste invoice or receipt text here for AI processing..."
           />
+        </div>
+
+        <div className="flex flex-col gap-3 p-4 border border-border rounded-lg bg-background/50">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="w-4 h-4 rounded border-border text-gold focus:ring-gold accent-gold"
+            />
+            <div className="flex items-center gap-1.5 select-none">
+              <RefreshCw className={`h-4 w-4 ${isRecurring ? 'text-gold' : 'text-muted-foreground'}`} />
+              <span className="text-sm font-medium text-foreground">Recurring Expense</span>
+            </div>
+          </label>
+          
+          {isRecurring && (
+            <div className="ml-7 flex items-center gap-3 animate-in fade-in slide-in-from-top-1">
+              <span className="text-sm text-muted-foreground">Frequency:</span>
+              <select
+                value={recurringDuration}
+                onChange={(e) => setRecurringDuration(e.target.value)}
+                className="bg-background border border-border rounded-md text-sm px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-gold"
+              >
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annually">Annually</option>
+              </select>
+            </div>
+          )}
         </div>
         
         <button
