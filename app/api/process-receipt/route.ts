@@ -57,10 +57,21 @@ export async function POST(request: Request) {
       ]
     })
 
+    // Duplicate detection
+    const { data: existingDocs } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('amount', object.amount)
+      .ilike('title', object.title)
+      .limit(1)
+
+    const is_duplicate = existingDocs && existingDocs.length > 0
+
     // 4. Return the data to the client for review before inserting to DB
     return NextResponse.json({ 
       extracted: object,
-      publicUrl 
+      publicUrl,
+      is_duplicate
     })
   } catch (error: any) {
     console.error('OCR Processing error:', error)

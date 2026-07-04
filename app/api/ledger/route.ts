@@ -14,3 +14,15 @@ export async function GET() {
 
   return NextResponse.json({ data })
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { id } = await request.json()
+    const { error } = await supabase.from('documents').delete().eq('id', id)
+    if (error) throw error
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('Ledger delete error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}

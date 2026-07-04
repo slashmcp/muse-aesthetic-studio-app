@@ -56,6 +56,11 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
         publicUrl: data.publicUrl
       })
       setTag(`#${data.extracted.category}`)
+      
+      if (data.is_duplicate) {
+        setErrorMsg('⚠️ Warning: A receipt from this vendor with the exact same amount already exists in your ledger.')
+      }
+      
       setPhase('review')
     } catch (err: any) {
       console.error(err)

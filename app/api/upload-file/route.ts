@@ -66,6 +66,18 @@ export async function POST(request: Request) {
         ]
       })
       extractedData = object
+
+      // Duplicate detection
+      const { data: existingDocs } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('amount', extractedData.amount)
+        .ilike('title', extractedData.title)
+        .limit(1)
+
+      if (existingDocs && existingDocs.length > 0) {
+        extractedData.title = `[DUPLICATE] ${extractedData.title}`
+      }
     } catch (parseError) {
       console.error('AI Parsing error:', parseError)
       // Fallback to defaults if AI fails

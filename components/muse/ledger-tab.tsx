@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { FileText, ArrowUpDown, Loader2 } from 'lucide-react'
+import { FileText, ArrowUpDown, Loader2, Trash2 } from 'lucide-react'
 import { currency } from '@/lib/muse-data'
 
 type SortField = 'created_at' | 'title' | 'category' | 'amount'
@@ -14,21 +14,39 @@ export function LedgerTab() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
   useEffect(() => {
-    async function fetchLedger() {
-      try {
-        const res = await fetch('/api/ledger')
-        const data = await res.json()
-        if (data.data) {
-          setDocuments(data.data)
-        }
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setIsLoading(false)
-      }
-    }
     fetchLedger()
   }, [])
+
+  async function fetchLedger() {
+    try {
+      const res = await fetch('/api/ledger')
+      const data = await res.json()
+      if (data.data) {
+        setDocuments(data.data)
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this record?')) return
+    
+    try {
+      const res = await fetch('/api/ledger', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      if (res.ok) {
+        setDocuments(docs => docs.filter(d => d.id !== id))
+      }
+    } catch (error) {
+      console.error('Failed to delete:', error)
+    }
+  }
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -145,6 +163,15 @@ export function LedgerTab() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
                       {currency(Number(doc.amount) || 0)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <button 
+                        onClick={() => handleDelete(doc.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        title="Delete record"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
