@@ -352,19 +352,26 @@ Please log this expense into the ledger for me and confirm when it's done.`
               
               {/* Render Tool Invocations */}
               {m.toolInvocations?.map((toolInvocation: any, index: number) => {
+                const actionMap: Record<string, string> = {
+                  logExpense: 'Logging expense...',
+                  searchLedger: 'Searching ledger...',
+                  getFinancialSummary: 'Calculating summary...',
+                  analyzeReorderFrequency: 'Analyzing inventory...',
+                  manageReminders: 'Updating reminders...',
+                  searchWeb: 'Searching the web...'
+                }
+                const friendlyAction = actionMap[toolInvocation.toolName] || 'Processing...'
+
                 return (
                   <div key={toolInvocation.toolCallId || index} className="flex gap-3 ml-11">
-                    <div className="bg-background border border-border rounded-lg p-3 text-xs text-muted-foreground max-w-[85%]">
-                      <div className="flex items-center gap-1.5 font-medium text-foreground mb-1">
+                    <div className="bg-background border border-border rounded-lg p-2.5 text-xs text-muted-foreground max-w-[85%] flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-1.5 font-medium text-foreground">
                         <Sparkles className="h-3 w-3 text-gold" />
-                        Executing Action: {toolInvocation.toolName}
+                        {friendlyAction}
                       </div>
-                      <pre className="overflow-x-auto p-2 bg-muted rounded mt-2 max-h-32">
-                        {JSON.stringify(toolInvocation.args, null, 2)}
-                      </pre>
                       {toolInvocation.result && (
-                        <div className={`mt-2 pt-2 border-t border-border font-medium ${toolInvocation.result.success === false ? 'text-destructive' : 'text-sage'}`}>
-                          {toolInvocation.result.success === false ? `✗ Failed: ${toolInvocation.result.error || 'Unknown error'}` : `✓ ${toolInvocation.result.message || 'Success'}`}
+                        <div className={`font-medium ${toolInvocation.result.success === false ? 'text-destructive' : 'text-sage'}`}>
+                          {toolInvocation.result.success === false ? '✗ Failed' : '✓ Done'}
                         </div>
                       )}
                     </div>
