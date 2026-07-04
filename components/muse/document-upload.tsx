@@ -1,41 +1,61 @@
 'use client'
 
-import { useState } from 'react'
-import { Upload, Camera, RefreshCw } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { UploadCloud, Camera, RefreshCw, FileImage, X } from 'lucide-react'
 
 export function DocumentUpload() {
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [isRecurring, setIsRecurring] = useState(false)
   const [recurringDuration, setRecurringDuration] = useState('monthly')
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setFile(e.dataTransfer.files[0])
+    }
+  }
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!file) return
 
     setIsLoading(true)
     setMessage('')
     try {
-      const res = await fetch('/api/upload', {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('isRecurring', String(isRecurring))
+      if (isRecurring) formData.append('recurringDuration', recurringDuration)
+
+      const res = await fetch('/api/upload-file', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          title, 
-          content, 
-          isRecurring, 
-          recurringDuration: isRecurring ? recurringDuration : null 
-        }),
+        body: formData,
       })
       const data = await res.json()
       
       if (res.ok && data.data) {
-        setMessage('Invoice / Receipt uploaded successfully! AI will process it shortly.')
-        setTitle('')
-        setContent('')
+        setMessage('File uploaded successfully! AI has extracted and saved the details.')
+        setFile(null)
         setIsRecurring(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
       } else {
-        setMessage(data.error || 'Failed to upload invoice/receipt')
+        setMessage(data.error || 'Failed to upload')
       }
     } catch (error) {
       console.error('Error uploading:', error)
@@ -48,34 +68,63 @@ export function DocumentUpload() {
   return (
     <div className="w-full max-w-xl mx-auto space-y-4 p-6 bg-card border border-border rounded-xl shadow-soft">
       <div className="flex items-center gap-2 mb-4">
-        <div className="flex items-center gap-1">
-          <Upload className="h-5 w-5 text-gold" />
-          <Camera className="h-5 w-5 text-gold" />
-        </div>
+        <UploadCloud className="h-5 w-5 text-gold" />
         <h2 className="text-lg font-semibold">Upload Invoice / Receipt</h2>
       </div>
       
       <form onSubmit={handleUpload} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Title (Optional)</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2 bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder="Invoice or Receipt title"
-          />
-        </div>
         
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">Content (Optional)</label>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full px-4 py-2 bg-background border border-border rounded-md h-32 resize-none focus:outline-none focus:ring-1 focus:ring-ring"
-            placeholder="Paste invoice or receipt text here for AI processing..."
-          />
-        </div>
+        {/* Dropzone */}
+        {!file ? (
+          <div 
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`w-full h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-colors ${
+              isDragging ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50 hover:bg-muted/30 bg-background/50'
+            }`}
+          >
+            <input 
+              type="file" 
+              className="hidden" 
+              ref={fileInputRef}
+              accept=".pdf,image/*"
+              onChange={(e) => {
+                if (e.target.files?.[0]) setFile(e.target.files[0])
+              }}
+            />
+            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+              <UploadCloud className="h-10 w-10 text-muted-foreground/60" />
+              <div className="text-center">
+                <p className="font-medium text-foreground">Click or drag a file here</p>
+                <p className="text-sm mt-1">Accepts Images or PDFs</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full p-4 border border-border rounded-xl bg-background/50 flex items-center justify-between">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="h-10 w-10 bg-gold/10 rounded-lg flex items-center justify-center shrink-0">
+                <FileImage className="h-5 w-5 text-gold" />
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFile(null)
+                if (fileInputRef.current) fileInputRef.current.value = ''
+              }}
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3 p-4 border border-border rounded-lg bg-background/50">
           <label className="flex items-center gap-3 cursor-pointer">
@@ -87,7 +136,7 @@ export function DocumentUpload() {
             />
             <div className="flex items-center gap-1.5 select-none">
               <RefreshCw className={`h-4 w-4 ${isRecurring ? 'text-gold' : 'text-muted-foreground'}`} />
-              <span className="text-sm font-medium text-foreground">Recurring Expense</span>
+              <span className="text-sm font-medium text-foreground">Flag as Recurring</span>
             </div>
           </label>
           
@@ -110,10 +159,10 @@ export function DocumentUpload() {
         
         <button
           type="submit"
-          disabled={isLoading}
-          className="w-full px-4 py-2 text-primary-foreground bg-primary rounded-md disabled:opacity-50 font-medium transition hover:opacity-90"
+          disabled={isLoading || !file}
+          className="w-full px-4 py-2 text-primary-foreground bg-primary rounded-md disabled:opacity-50 font-medium transition hover:opacity-90 flex justify-center"
         >
-          {isLoading ? 'Uploading...' : 'Upload to Supabase'}
+          {isLoading ? 'Processing with AI...' : 'Process & Upload'}
         </button>
       </form>
       

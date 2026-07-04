@@ -10,6 +10,8 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
+    const explicitRecurring = formData.get('isRecurring') === 'true'
+    const recurringDuration = formData.get('recurringDuration') as string | null
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -84,6 +86,8 @@ export async function POST(request: Request) {
     }
 
     // Insert into Ledger
+    const finalIsRecurring = explicitRecurring ? true : extractedData.is_recurring
+
     const { data, error: dbError } = await supabase
       .from('documents')
       .insert([{
@@ -91,7 +95,8 @@ export async function POST(request: Request) {
         content: `Uploaded Document: ${publicUrl}`,
         amount: extractedData.amount,
         category: extractedData.category,
-        is_recurring: extractedData.is_recurring
+        is_recurring: finalIsRecurring,
+        recurring_duration: finalIsRecurring && recurringDuration ? recurringDuration : null
       }])
       .select()
       .single()
