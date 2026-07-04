@@ -86,7 +86,15 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-4">
-      <form onSubmit={handleSearch} className="flex gap-2">
+      <form onSubmit={(e) => {
+        e.preventDefault()
+        // If query exists, open AI portal
+        if (query.trim() && onAskAI) {
+          onAskAI(query)
+        } else {
+          handleSearch(e)
+        }
+      }} className="flex gap-2">
         <input 
           type="file" 
           ref={fileInputRef} 
@@ -94,51 +102,44 @@ export function SearchBar({ onAskAI }: { onAskAI?: (query: string) => void }) {
           accept=".pdf,image/*" 
           onChange={handleFileUpload} 
         />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="shrink-0 h-10 w-10 flex items-center justify-center rounded-md bg-muted/50 border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          title="Upload file or PDF"
-        >
-          <Paperclip className="h-4 w-4" />
-        </button>
-
-        <div className="relative flex-1">
+        
+        <div className="relative flex-1 flex items-center bg-background border border-border rounded-full focus-within:ring-1 focus-within:ring-gold transition-shadow">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="shrink-0 h-10 w-10 flex items-center justify-center rounded-l-full text-muted-foreground hover:bg-muted/50 transition-colors ml-1"
+            title="Upload file or PDF"
+          >
+            <Paperclip className="h-4 w-4" />
+          </button>
+          
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={isListening ? "Listening..." : "Search or Ask AI..."}
-            className="w-full px-4 py-2 pr-10 bg-background border border-border focus:ring-1 focus:ring-gold focus:outline-none rounded-md text-sm"
+            className="flex-1 px-2 py-2.5 bg-transparent focus:outline-none text-sm"
           />
-          <button
-            type="button"
-            onClick={toggleListen}
-            className={`absolute right-2 top-1.5 h-6 w-6 flex items-center justify-center rounded-full transition-colors ${
-              isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <Mic className="h-3.5 w-3.5" />
-          </button>
+          
+          <div className="flex items-center gap-1 pr-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={toggleListen}
+              className={`h-7 w-7 flex items-center justify-center rounded-full transition-colors ${
+                isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+              }`}
+            >
+              <Mic className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || (!query.trim() && !isListening)}
+              className="h-8 w-24 flex items-center justify-center rounded-full bg-gold text-primary-foreground disabled:opacity-50 transition-opacity text-xs font-semibold mr-0.5"
+            >
+              {isLoading ? '...' : 'Ask Muse'}
+            </button>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            if (query.trim() && onAskAI) {
-              onAskAI(query)
-            }
-          }}
-          className="px-4 py-2 text-gold border border-gold/30 bg-gold/10 hover:bg-gold/20 rounded-md font-medium text-sm transition-colors whitespace-nowrap"
-        >
-          Ask AI
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="px-4 py-2 text-primary-foreground bg-primary hover:opacity-90 transition-opacity rounded-md disabled:opacity-50 font-medium text-sm"
-        >
-          {isLoading ? '...' : 'Search'}
-        </button>
       </form>
 
       {results.length > 0 && (
