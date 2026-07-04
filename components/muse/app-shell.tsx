@@ -8,6 +8,7 @@ import { CaptureModal } from './capture-modal'
 import { DocumentUpload } from './document-upload'
 import { SearchBar } from './search-bar'
 import { ReportsTab } from './reports-tab'
+import { UpcomingReminders } from './upcoming-reminders'
 
 type Theme = 'dark' | 'light'
 
@@ -35,6 +36,7 @@ export function AppShell() {
       <main className="flex-1 space-y-6 px-4 pb-36 pt-4">
         {activeTab === 'home' && (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <UpcomingReminders />
             <DocumentUpload />
             <SearchBar />
           </div>

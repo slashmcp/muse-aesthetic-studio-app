@@ -1,4 +1,4 @@
-export type Category = 'backbar' | 'utilities' | 'marketing' | 'supplies' | 'personal'
+export type Category = 'backbar' | 'utilities' | 'marketing' | 'supplies' | 'personal' | 'taxes' | 'rent' | 'licensing' | 'conferences'
 
 export type LedgerEntry = {
   id: string
@@ -19,6 +19,10 @@ export const CATEGORY_META: Record<
   marketing: { label: 'Marketing', tag: '#marketing' },
   supplies: { label: 'Supplies', tag: '#supplies' },
   personal: { label: 'Personal (Ali & Kristina)', tag: '#personal' },
+  taxes: { label: 'Tax Payments', tag: '#taxes' },
+  rent: { label: 'Rent', tag: '#rent' },
+  licensing: { label: 'Licensing Fees', tag: '#licensing' },
+  conferences: { label: 'Conferences & Events', tag: '#conferences' },
 }
 
 // Monthly backbar budget for non-resellable pro-use products not tracked in Vagaro.

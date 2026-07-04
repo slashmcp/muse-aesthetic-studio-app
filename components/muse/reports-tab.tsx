@@ -31,7 +31,11 @@ export function ReportsTab() {
     utilities: '#8ba699', // sage
     marketing: '#e6cf9c', // accent-foreground
     supplies: '#a1a1aa', // muted-foreground
-    personal: '#e0736f', // destructive (or a nice red/pink)
+    personal: '#e0736f', // destructive
+    taxes: '#b23a3a', // dark red
+    rent: '#6b5222', // dark gold
+    licensing: '#3d5245', // primary dark green
+    conferences: '#cdae76', // gold-soft
   }
 
   return (
