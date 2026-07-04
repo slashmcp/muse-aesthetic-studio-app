@@ -15,8 +15,23 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
   const [previewUrl, setPreviewUrl] = useState<string>('/receipt-scan.png')
   const [errorMsg, setErrorMsg] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([])
 
-  const tags = ['#Supplies', '#Rent', '#Utilities', '#Marketing', '#Personal', '#Software', '#Meals', '#Travel', '#Uncategorized']
+  useEffect(() => {
+    fetchCategories()
+  }, [])
+
+  async function fetchCategories() {
+    try {
+      const res = await fetch('/api/categories')
+      const data = await res.json()
+      if (data.data) {
+        setCategories(data.data)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   useEffect(() => {
     if (file) {
@@ -40,6 +55,9 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
     try {
       const formData = new FormData()
       formData.append('file', imgFile)
+      if (categories.length > 0) {
+        formData.append('categories', JSON.stringify(categories.map(c => c.name)))
+      }
       
       const res = await fetch('/api/process-receipt', {
         method: 'POST',
@@ -192,20 +210,23 @@ export function CaptureModal({ file, onClose }: { file?: File, onClose: () => vo
                 </span>
               </div>
               <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                {tags.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTag(t)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-95 ${
-                      tag.toLowerCase() === t.toLowerCase()
-                        ? 'bg-primary text-primary-foreground'
-                        : 'border border-border bg-card text-muted-foreground'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                ))}
+                {categories.map((c) => {
+                  const t = `#${c.name}`
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setTag(t)}
+                      className={`rounded-full px-3 py-1.5 text-xs font-semibold transition active:scale-95 ${
+                        tag.toLowerCase() === t.toLowerCase()
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-border bg-card text-muted-foreground'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 

@@ -12,6 +12,8 @@ export async function POST(request: Request) {
     const file = formData.get('file') as File | null
     const explicitRecurring = formData.get('isRecurring') === 'true'
     const recurringDuration = formData.get('recurringDuration') as string | null
+    const categoriesStr = formData.get('categories') as string | null
+    const customCategories = categoriesStr ? JSON.parse(categoriesStr) : ['Supplies', 'Rent', 'Utilities', 'Marketing', 'Personal', 'Software', 'Meals', 'Travel', 'Uncategorized']
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -70,7 +72,7 @@ export async function POST(request: Request) {
         body: JSON.stringify({
           model: 'claude-sonnet-5',
           max_tokens: 1024,
-          system: 'You are an expert expense parser. Read the receipt/invoice. Extract the Merchant Name (Title), the Total Amount, the Date, the Category, and an Itemized list. Default to standard business categories: Supplies, Rent, Utilities, Marketing, Personal, Software, Meals, Travel. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.',
+          system: `You are an expert expense parser. Read the receipt/invoice. Extract the Merchant Name (Title), the Total Amount, the Date, the Category, and an Itemized list. Restrict the Category to ONE of these exactly: ${customCategories.join(', ')}. If you detect recurring keywords like "Subscription" or "Monthly", set is_recurring to true.`,
           messages: [
             {
               role: 'user',

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { FileText, ArrowUpDown, Loader2, Trash2 } from 'lucide-react'
+import { FileText, ArrowUpDown, Loader2, Trash2, Settings2 } from 'lucide-react'
 import { currency } from '@/lib/muse-data'
+import { ManageCategoriesModal } from './manage-categories-modal'
 
 type SortField = 'created_at' | 'title' | 'category' | 'amount'
 type SortOrder = 'asc' | 'desc'
@@ -12,10 +13,25 @@ export function LedgerTab() {
   const [isLoading, setIsLoading] = useState(true)
   const [sortField, setSortField] = useState<SortField>('created_at')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [categories, setCategories] = useState<{id: string, name: string}[]>([])
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false)
 
   useEffect(() => {
     fetchLedger()
+    fetchCategories()
   }, [])
+
+  async function fetchCategories() {
+    try {
+      const res = await fetch('/api/categories')
+      const data = await res.json()
+      if (data.data) {
+        setCategories(data.data)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   async function fetchLedger() {
     try {
@@ -119,10 +135,27 @@ export function LedgerTab() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
-      <div className="flex items-center gap-2 mb-4 px-2">
-        <FileText className="h-5 w-5 text-gold" />
-        <h2 className="text-xl font-semibold">Ledger</h2>
+      <div className="flex items-center justify-between mb-4 px-2">
+        <div className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-gold" />
+          <h2 className="text-xl font-semibold">Ledger</h2>
+        </div>
+        <button
+          onClick={() => setIsManageModalOpen(true)}
+          className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-full hover:bg-muted/50 border border-transparent hover:border-border/50"
+        >
+          <Settings2 className="h-3.5 w-3.5" />
+          Manage Categories
+        </button>
       </div>
+
+      <ManageCategoriesModal 
+        isOpen={isManageModalOpen} 
+        onClose={() => {
+          setIsManageModalOpen(false)
+          fetchCategories()
+        }} 
+      />
 
       {documents.length === 0 ? (
         <div className="p-8 text-center text-muted-foreground bg-card border border-border rounded-xl">
@@ -194,15 +227,12 @@ export function LedgerTab() {
                           onChange={(e) => handleUpdateCategory(doc.id, e.target.value)}
                           className="px-2 py-1 bg-muted rounded-md text-xs font-medium text-foreground border border-transparent focus:border-gold/50 focus:ring-1 focus:ring-gold/50 focus:outline-none transition-colors cursor-pointer hover:bg-muted/80"
                         >
-                          <option value="Supplies">Supplies</option>
-                          <option value="Rent">Rent</option>
-                          <option value="Utilities">Utilities</option>
-                          <option value="Marketing">Marketing</option>
-                          <option value="Personal">Personal</option>
-                          <option value="Software">Software</option>
-                          <option value="Meals">Meals</option>
-                          <option value="Travel">Travel</option>
-                          <option value="Uncategorized">Uncategorized</option>
+                          {categories.map(c => (
+                            <option key={c.id} value={c.name}>{c.name}</option>
+                          ))}
+                          {!categories.find(c => c.name === 'Uncategorized') && (
+                            <option value="Uncategorized">Uncategorized</option>
+                          )}
                         </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right font-medium">

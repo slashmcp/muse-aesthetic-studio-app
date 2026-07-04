@@ -10,6 +10,27 @@ create table documents (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- Create categories table
+create table if not exists categories (
+  id uuid primary key default gen_random_uuid(),
+  name text not null unique,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Insert default categories
+insert into categories (name) values 
+  ('Supplies'),
+  ('Back Bar'),
+  ('Rent'),
+  ('Utilities'),
+  ('Marketing'),
+  ('Personal'),
+  ('Software'),
+  ('Meals'),
+  ('Travel'),
+  ('Uncategorized')
+on conflict (name) do nothing;
+
 -- Add a generated column for full text search
 alter table documents
 add column fts tsvector generated always as (to_tsvector('english', title || ' ' || content)) stored;
