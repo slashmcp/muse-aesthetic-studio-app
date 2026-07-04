@@ -80,8 +80,8 @@ export async function POST(request: Request) {
             content: [
               { type: 'text', text: 'Extract the details from this document:' },
               isPdf 
-                ? { type: 'file', data: buffer, mimeType }
-                : { type: 'image', image: buffer }
+                ? { type: 'file', data: buffer.toString('base64'), mimeType }
+                : { type: 'image', image: buffer.toString('base64') }
             ]
           }
         ]
