@@ -26,3 +26,15 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const { id, category } = await request.json()
+    const { error } = await supabase.from('documents').update({ category }).eq('id', id)
+    if (error) throw error
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    console.error('Ledger update error:', err)
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}

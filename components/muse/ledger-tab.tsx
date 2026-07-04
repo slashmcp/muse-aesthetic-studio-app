@@ -48,6 +48,26 @@ export function LedgerTab() {
     }
   }
 
+  const handleUpdateCategory = async (id: string, newCategory: string) => {
+    try {
+      // Optimistic UI update
+      setDocuments(docs => docs.map(d => d.id === id ? { ...d, category: newCategory } : d))
+      
+      const res = await fetch('/api/ledger', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, category: newCategory })
+      })
+      if (!res.ok) {
+        // Revert on failure
+        fetchLedger()
+      }
+    } catch (error) {
+      console.error('Failed to update:', error)
+      fetchLedger()
+    }
+  }
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
@@ -168,9 +188,22 @@ export function LedgerTab() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2.5 py-1 bg-muted rounded-md text-xs font-medium text-foreground">
-                          {doc.category || 'Uncategorized'}
-                        </span>
+                        <select
+                          value={doc.category || 'Uncategorized'}
+                          onClick={(e) => e.stopPropagation()} // Prevent opening the link
+                          onChange={(e) => handleUpdateCategory(doc.id, e.target.value)}
+                          className="px-2 py-1 bg-muted rounded-md text-xs font-medium text-foreground border border-transparent focus:border-gold/50 focus:ring-1 focus:ring-gold/50 focus:outline-none transition-colors cursor-pointer hover:bg-muted/80"
+                        >
+                          <option value="Supplies">Supplies</option>
+                          <option value="Rent">Rent</option>
+                          <option value="Utilities">Utilities</option>
+                          <option value="Marketing">Marketing</option>
+                          <option value="Personal">Personal</option>
+                          <option value="Software">Software</option>
+                          <option value="Meals">Meals</option>
+                          <option value="Travel">Travel</option>
+                          <option value="Uncategorized">Uncategorized</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right font-medium">
                         {currency(Number(doc.amount) || 0)}
