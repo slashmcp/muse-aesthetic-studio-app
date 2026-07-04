@@ -3,6 +3,10 @@ create table documents (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   content text not null,
+  amount numeric(10, 2) default 0.00,
+  category text,
+  is_recurring boolean default false,
+  recurring_duration text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
