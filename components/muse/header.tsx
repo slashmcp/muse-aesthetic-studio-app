@@ -6,9 +6,11 @@ import { Moon, Sun, Sparkles } from 'lucide-react'
 export function Header({
   theme,
   onToggleTheme,
+  onOpenAI,
 }: {
   theme: 'dark' | 'light'
   onToggleTheme: () => void
+  onOpenAI?: () => void
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl">
@@ -28,7 +30,10 @@ export function Header({
             <p className="font-serif text-lg font-semibold tracking-tight text-foreground">
               Muse Aesthetic Studio
             </p>
-            <div className="flex items-center gap-1.5">
+            <button 
+              onClick={onOpenAI}
+              className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+            >
               <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-softpulse absolute inline-flex h-full w-full rounded-full bg-sage" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sage" />
@@ -36,7 +41,7 @@ export function Header({
               <span className="text-[11px] font-medium tracking-wide text-muted-foreground">
                 AI Agent · Active
               </span>
-            </div>
+            </button>
           </div>
         </div>
 

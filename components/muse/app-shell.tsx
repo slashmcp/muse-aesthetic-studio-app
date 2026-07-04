@@ -9,6 +9,7 @@ import { DocumentUpload } from './document-upload'
 import { SearchBar } from './search-bar'
 import { ReportsTab } from './reports-tab'
 import { UpcomingReminders } from './upcoming-reminders'
+import { AiAssistantModal } from './ai-assistant-modal'
 
 type Theme = 'dark' | 'light'
 
@@ -17,21 +18,26 @@ export function AppShell() {
   const [listening, setListening] = useState(false)
   const [capturing, setCapturing] = useState(false)
   const [activeTab, setActiveTab] = useState('home')
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false)
 
-  // Sync theme class on <html> so the whole UI shifts palettes.
+  // Initialize theme
   useEffect(() => {
-    const root = document.documentElement
-    root.classList.add('theme-transition')
-    root.classList.toggle('dark', theme === 'dark')
-    root.classList.toggle('light', theme === 'light')
+    const root = window.document.documentElement
+    root.classList.remove('light', 'dark')
+    root.classList.add(theme)
   }, [theme])
 
-  const toggleTheme = () =>
-    setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
+  }
 
   return (
-    <div className="relative mx-auto flex min-h-dvh w-full max-w-md flex-col bg-background text-foreground">
-      <Header theme={theme} onToggleTheme={toggleTheme} />
+    <div className="relative flex min-h-screen flex-col bg-background text-foreground transition-colors duration-300">
+      <Header 
+        theme={theme} 
+        onToggleTheme={toggleTheme} 
+        onOpenAI={() => setIsAIModalOpen(true)}
+      />
 
       <main className="flex-1 space-y-6 px-4 pb-36 pt-4">
         {activeTab === 'home' && (
@@ -43,6 +49,11 @@ export function AppShell() {
         )}
         {activeTab === 'reports' && <ReportsTab />}
       </main>
+
+      <AiAssistantModal 
+        isOpen={isAIModalOpen} 
+        onClose={() => setIsAIModalOpen(false)} 
+      />
 
       <BottomDock
         activeTab={activeTab}
