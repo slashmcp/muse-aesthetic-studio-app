@@ -206,6 +206,69 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
 
   if (!isOpen) return null
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Reset input
+    e.target.value = ''
+    
+    // Optimistically show we are processing
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'user',
+      content: `[Uploading and scanning document: ${file.name}...]`
+    }])
+    setIsLoading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const res = await fetch('/api/process-receipt', {
+        method: 'POST',
+        body: formData
+      })
+      
+      const data = await res.json()
+      
+      if (res.ok && data.extracted) {
+        // Remove the temporary uploading message
+        setMessages(prev => prev.filter(m => !m.content.toString().startsWith('[Uploading')))
+        
+        // Auto-send the extracted data to the chat so the AI can log it
+        const prompt = `I just uploaded a receipt/invoice. Here is the data your vision model extracted from it:
+- Vendor: ${data.extracted.title}
+- Amount: $${data.extracted.amount}
+- Category: ${data.extracted.category}
+- Recurring: ${data.extracted.is_recurring ? 'Yes' : 'No'}
+
+Please log this expense into the ledger for me and confirm when it's done.`
+        
+        await appendMessage(prompt)
+      } else {
+        setMessages(prev => prev.filter(m => !m.content.toString().startsWith('[Uploading')))
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `Error scanning document: ${data.error || 'Unknown error'}`
+        }])
+        setIsLoading(false)
+      }
+    } catch (err: any) {
+      setMessages(prev => prev.filter(m => !m.content.toString().startsWith('[Uploading')))
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `Error scanning document: ${err.message}`
+      }])
+      setIsLoading(false)
+    }
+  }
+
   const modalContent = (
     <>
       {/* Header (Draggable) */}
@@ -329,14 +392,33 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
       {/* Input Area */}
       <div className="p-4 border-t border-border bg-background/50">
         <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
+          {/* Hidden file inputs */}
+          <input 
+            type="file" 
+            accept="image/*,application/pdf" 
+            className="hidden" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+          />
+          <input 
+            type="file" 
+            accept="image/*" 
+            capture="environment" 
+            className="hidden" 
+            ref={cameraInputRef} 
+            onChange={handleFileUpload} 
+          />
+
           <button
             type="button"
+            onClick={() => fileInputRef.current?.click()}
             className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted/80 transition-colors"
           >
             <Paperclip className="h-4 w-4" />
           </button>
           <button
             type="button"
+            onClick={() => cameraInputRef.current?.click()}
             className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted/80 transition-colors"
           >
             <Camera className="h-4 w-4" />
