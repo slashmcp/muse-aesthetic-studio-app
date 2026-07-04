@@ -21,7 +21,7 @@ export function Header({
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-border">
             <Image
-              src="/muse-logo.png"
+              src="https://muse2025.s3.us-east-1.amazonaws.com/Copy+of+Copy+of+Grey+and+Black+Minimalist+Simple+Modern+Gaze+Creative+Studio+Logo+(1).png"
               alt="Muse Aesthetic Studio logo"
               width={40}
               height={40}

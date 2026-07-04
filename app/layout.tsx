@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     title: 'Muse',
     statusBarStyle: 'black-translucent',
   },
+  icons: {
+    icon: 'https://muse2025.s3.us-east-1.amazonaws.com/Copy+of+Copy+of+Grey+and+Black+Minimalist+Simple+Modern+Gaze+Creative+Studio+Logo+(1).png'
+  }
 }
 
 export const viewport: Viewport = {
