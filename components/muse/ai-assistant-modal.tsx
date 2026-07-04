@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { X, Send, Sparkles, Bot, User, Mic } from 'lucide-react'
+import { X, Send, Sparkles, Bot, User, Mic, Paperclip, Camera } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 interface AiAssistantModalProps {
@@ -65,8 +65,6 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
         
         recognitionRef.current.onend = () => {
           setIsListening(false)
-          // Optional: automatically submit when speech ends if input is not empty
-          // But usually better to let user confirm.
         }
         
         recognitionRef.current.onerror = (event: any) => {
@@ -109,6 +107,13 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
     onClose()
   }
 
+  const suggestionPills = [
+    "🎫 Next Face & Body Expo in Chicago",
+    "📊 Log $50 invoice for SkinCeuticals",
+    "📅 Upcoming spa shows in Des Moines",
+    "📝 Show me my top expenses this month"
+  ]
+
   if (!isOpen) return null
 
   return (
@@ -139,11 +144,26 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
         {/* Chat Area */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-3 opacity-60">
-              <Sparkles className="h-8 w-8 text-gold" />
-              <p className="text-sm text-muted-foreground font-medium">
-                I'm your Muse AI assistant. <br/> How can I help you manage the studio today?
-              </p>
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+              <div className="space-y-3 opacity-60">
+                <Sparkles className="h-8 w-8 text-gold mx-auto" />
+                <p className="text-sm text-muted-foreground font-medium">
+                  I'm your Muse AI assistant. <br/> How can I help you manage the studio today?
+                </p>
+              </div>
+              
+              <div className="w-full max-w-[280px] space-y-2 mt-4">
+                <p className="text-xs font-semibold text-muted-foreground text-left mb-2 uppercase tracking-wider">Suggested for you</p>
+                {suggestionPills.map((suggestion, i) => (
+                  <button 
+                    key={i}
+                    onClick={() => append({ role: 'user', content: suggestion.split(' ').slice(1).join(' ') })}
+                    className="w-full text-left text-sm px-4 py-2.5 bg-background border border-border hover:border-gold/50 hover:bg-gold/5 rounded-lg transition-colors text-foreground shadow-sm"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             messages.map(m => (
@@ -172,7 +192,6 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
                 {/* Render Tool Invocations */}
                 {m.toolInvocations?.map((toolInvocation: any) => {
                   const toolCallId = toolInvocation.toolCallId
-                  const addResult = (result: string) => {} // we don't have client side tool resolution yet
                   
                   return (
                     <div key={toolCallId} className="flex gap-3 ml-11">
@@ -216,27 +235,43 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
           <form onSubmit={handleSubmit} className="relative flex items-center gap-2">
             <button
               type="button"
-              onClick={toggleListen}
-              className={`shrink-0 h-10 w-10 flex items-center justify-center rounded-full transition-colors ${
-                isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
+              className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted/80 transition-colors"
             >
-              <Mic className="h-4 w-4" />
+              <Paperclip className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted/80 transition-colors"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+            
             <div className="relative flex-1">
               <input
                 value={input}
                 onChange={handleInputChange}
-                placeholder={isListening ? "Listening..." : "Ask Muse AI..."}
-                className="w-full bg-background border border-border rounded-full pl-4 pr-12 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gold"
+                placeholder={isListening ? "Listening..." : "Message Muse AI..."}
+                className="w-full bg-background border border-border rounded-full pl-4 pr-20 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-gold"
               />
-              <button
-                type="submit"
-                disabled={isLoading || (!input.trim() && !isListening)}
-                className="absolute right-1.5 top-1.5 h-8 w-8 flex items-center justify-center rounded-full bg-gold text-primary-foreground disabled:opacity-50 transition-opacity"
-              >
-                <Send className="h-4 w-4" />
-              </button>
+              
+              <div className="absolute right-1 top-1.5 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={toggleListen}
+                  className={`h-7 w-7 flex items-center justify-center rounded-full transition-colors ${
+                    isListening ? 'bg-destructive text-destructive-foreground animate-pulse' : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Mic className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading || (!input.trim() && !isListening)}
+                  className="h-7 w-7 flex items-center justify-center rounded-full bg-gold text-primary-foreground disabled:opacity-50 transition-opacity"
+                >
+                  <Send className="h-3.5 w-3.5 ml-0.5" />
+                </button>
+              </div>
             </div>
           </form>
         </div>

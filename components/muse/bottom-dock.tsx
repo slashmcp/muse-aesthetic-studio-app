@@ -43,19 +43,6 @@ export function BottomDock({
             Capture
           </span>
         </div>
-
-        <DockButton
-          icon={Mic}
-          label="Voice"
-          active={false}
-          onClick={onOpenVoice}
-        />
-        <DockButton
-          icon={Settings}
-          label="Settings"
-          active={activeTab === 'settings'}
-          onClick={() => onTabChange('settings')}
-        />
       </nav>
     </div>
   )
