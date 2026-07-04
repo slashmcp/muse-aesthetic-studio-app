@@ -37,16 +37,15 @@ export async function POST(req: Request) {
             return { success: true, results: `Found 3 matching records for '${query}' (Mock data).` }
           },
         }),
-        bookTravel: tool({
-          description: 'Create a travel reservation or calendar event.',
+        getEventTickets: tool({
+          description: 'Get ticket prices or offer to purchase tickets for an esthetician event or trade show.',
           parameters: z.object({
-            destination: z.string().describe('Where the user is traveling.'),
-            dates: z.string().describe('The dates of the trip.'),
-            purpose: z.string().describe('The reason for the trip, e.g., conference name.'),
+            eventName: z.string().describe('The name of the event or trade show.'),
+            location: z.string().describe('The location of the event (e.g., Chicago, Des Moines).'),
           }),
-          execute: async ({ destination, dates, purpose }) => {
-            console.log(`[Tool Executed] bookTravel: ${destination} on ${dates} for ${purpose}`)
-            return { success: true, message: `Travel booked to ${destination} for ${dates} (${purpose}).` }
+          execute: async ({ eventName, location }) => {
+            console.log(`[Tool Executed] getEventTickets: ${eventName} in ${location}`)
+            return { success: true, message: `Tickets for ${eventName} in ${location} start at $150. Would you like me to reserve a pass for you?` }
           },
         }),
       },
