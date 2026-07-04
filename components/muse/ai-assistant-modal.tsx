@@ -40,6 +40,9 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
   const dragStartPos = useRef({ x: 0, y: 0 })
   const dragStartElementPos = useRef({ x: 0, y: 0 })
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+
   useEffect(() => {
     const checkIsDesktop = () => setIsDesktop(window.innerWidth >= 768)
     checkIsDesktop()
@@ -205,9 +208,6 @@ export function AiAssistantModal({ isOpen, startWithVoice, initialQuery, onClose
   ]
 
   if (!isOpen) return null
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
